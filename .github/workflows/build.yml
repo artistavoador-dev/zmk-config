@@ -6,34 +6,43 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout local config
         uses: actions/checkout@v4
-
-      - name: Cache west modules
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-zephyr-modules
         with:
-          path: |
-            modules
-            tools
-            zephyr
-            bootloader
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/west.yml') }}
+          path: config-repo
 
-      - name: Initialize workspace
+      - name: Initialize Keychron Workspace
         run: |
           pip3 install west
-          west init -m https://github.com --mr keychron_bpro app
+          # 1. Clonar o repositório da Keychron diretamente
+          git clone -b keychron_bpro https://github.com zmk-main
+          cd zmk-main
+          
+          # 2. Inicialização local obrigatória da Keychron
+          west init -l app/
           west update
-          west zephyr-export
+          
+          # 3. Aplicar o remendo de hardware exigido pela Keychron
+          cd zephyr
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git am ../0001-esb-nrf-fix.patch
+          
+          # 4. Injetar as suas 3 linhas personalizadas no ficheiro oficial
+          cd ../app/boards/shields/keychron/b6/uk
+          cat <<EOF >> keychron_b6_uk.conf
+          CONFIG_USB_HID_BOOT_PROTOCOL=y
+          CONFIG_ZMK_HID_REPORT_TYPE_HKRO=y
+          CONFIG_ZMK_USB=y
+          EOF
 
       - name: Build firmware
         run: |
-          west build -p -s app -b keychron -- -DSHIELD=keychron_b6_uk -DZMK_CONFIG="/__w/zmk-config/zmk-config/config"
+          cd zmk-main/app
+          west build -p -b keychron -- -DSHIELD=keychron_b6_uk
           
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: keychron_b6_uk_firmware
-          path: build/zephyr/zmk.uf2
+          path: zmk-main/build/zephyr/zmk.uf2
