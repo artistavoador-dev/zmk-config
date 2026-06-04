@@ -24,10 +24,23 @@ jobs:
           west update
           west zephyr-export
           
+          # 3. Procurar e aplicar o patch obrigatório da Keychron automaticamente
+          PATCH_FILE=$(find . -name "*esb-nrf-fix.patch" | head -n 1)
+          if [ -n "$PATCH_FILE" ]; then
+            echo "Patch encontrado em: $PATCH_FILE"
+            cd zephyr
+            git config --global user.email "actions@github.com"
+            git config --global user.name "GitHub Actions"
+            git am "../$PATCH_FILE" || git apply "../$PATCH_FILE"
+            cd ..
+          else
+            echo "AVISO: Ficheiro patch não encontrado na árvore de diretórios."
+          fi
+          
           # Correção do Bug de barras da Keychron (Windows para Linux)
           sed -i 's|..\\version.h|../version.h|g' app/src/dfu/tdfu_prv.h
           
-          # 3. Injetar as suas 3 linhas personalizadas diretamente no ficheiro oficial do B6 UK
+          # 4. Injetar as suas 3 linhas personalizadas diretamente no ficheiro oficial do B6 UK
           cd app/boards/shields/keychron/b6/uk
           cat <<EOF >> keychron_b6_uk.conf
           CONFIG_USB_HID_BOOT_PROTOCOL=y
