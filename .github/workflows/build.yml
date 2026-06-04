@@ -37,22 +37,31 @@ jobs:
           # Correção do Bug de caminhos Windows/Linux da Keychron
           sed -i 's|..\\version.h|../version.h|g' app/src/dfu/tdfu_prv.h
           
-          # 4. Injetar as suas 3 linhas + a flag para limpar a memória ao iniciar
+          # 4. Injetar as suas 3 linhas personalizadas originais (sem a flag inválida)
           cd app/boards/shields/keychron/b6/uk
           cat <<EOF >> keychron_b6_uk.conf
           CONFIG_USB_HID_BOOT_PROTOCOL=y
           CONFIG_ZMK_HID_REPORT_TYPE_HKRO=y
           CONFIG_ZMK_USB=y
-          CONFIG_ZMK_SETTINGS_RESET_ON_START=y
           EOF
 
       - name: Build firmware (Keychron B6 UK)
         run: |
           cd zmk-repo/app
           west build -p -b keychron -- -DSHIELD=keychron_b6_uk
+          mv build/zephyr/zmk.uf2 ../../keychron_b6_uk.uf2
+
+      - name: Build keychron reset (Limpeza oficial da Keychron)
+        run: |
+          cd zmk-repo/app
+          # Compilar o escudo de reset nativo da Keychron
+          west build -p -b keychron -d build_reset -- -DSHIELD=keychron_reset
+          mv build_reset/zephyr/zmk.uf2 ../../keychron_reset.uf2
           
-      - name: Upload artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: keychron_b6_uk_firmware
-          path: zmk-repo/app/build/zephyr/zmk.uf2
+          path: |
+            keychron_b6_uk.uf2
+            keychron_reset.uf2
