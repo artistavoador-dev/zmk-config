@@ -16,7 +16,7 @@ jobs:
       - name: Initialize Keychron Workspace
         run: |
           # 1. Clonar o repositório oficial da Keychron com o link completo
-          git clone -b keychron_bpro https://github.com zmk-repo
+          git clone -b keychron_bpro https://github.com/keychron/zmk.git zmk-repo
           cd zmk-repo
           
           # 2. Inicialização do manifest local da Keychron
