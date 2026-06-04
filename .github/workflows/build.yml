@@ -5,6 +5,8 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: zmkfirmware/zmk-build-arm:stable
     steps:
       - name: Checkout local config
         uses: actions/checkout@v4
@@ -13,14 +15,14 @@ jobs:
 
       - name: Initialize Keychron Workspace
         run: |
-          pip3 install west
           # 1. Clonar o repositório oficial da Keychron com o link completo
-          git clone -b keychron_bpro https://github.com/keychron/zmk.git zmk-repo
+          git clone -b keychron_bpro https://github.com zmk-repo
           cd zmk-repo
           
           # 2. Inicialização do manifest local da Keychron
           west init -l app/
           west update
+          west zephyr-export
           
           # 3. Injetar as suas 3 linhas personalizadas diretamente no ficheiro oficial do B6 UK
           cd app/boards/shields/keychron/b6/uk
@@ -39,4 +41,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: keychron_b6_uk_firmware
-          path: zmk-repo/build/zephyr/zmk.uf2
+          path: zmk-repo/app/build/zephyr/zmk.uf2
