@@ -52,7 +52,7 @@ jobs:
       - name: Build firmware (Keychron B6 ISO via UK Shield)
         run: |
           cd zmk-repo/app
-          west build -p -b keychron -- -DSHIELD=keychron_b6_uk
+          west build -p -b keychron@v2 -- -DSHIELD=keychron_b6_uk
           
       - name: Upload artifact
         uses: actions/upload-artifact@v4
