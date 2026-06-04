@@ -24,6 +24,9 @@ jobs:
           west update
           west zephyr-export
           
+          # Correção do Bug de barras da Keychron (Windows para Linux)
+          sed -i 's|..\\version.h|../version.h|g' app/src/dfu/tdfu_prv.h
+          
           # 3. Injetar as suas 3 linhas personalizadas diretamente no ficheiro oficial do B6 UK
           cd app/boards/shields/keychron/b6/uk
           cat <<EOF >> keychron_b6_uk.conf
