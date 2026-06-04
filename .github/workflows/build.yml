@@ -15,7 +15,7 @@ jobs:
 
       - name: Initialize Keychron Workspace
         run: |
-          # 1. Clonar o repositório oficial da Keychron com o link completo
+          # 1. Clonar o repositório oficial da Keychron
           git clone -b keychron_bpro https://github.com/keychron/zmk.git zmk-repo
           cd zmk-repo
           
@@ -37,15 +37,19 @@ jobs:
           # Correção do Bug de caminhos Windows/Linux da Keychron
           sed -i 's|..\\version.h|../version.h|g' app/src/dfu/tdfu_prv.h
           
-          # 4. Injetar as suas 3 linhas personalizadas
+          # 4. Injetar as suas configurações e FORÇAR o PID ISO (0x076C) no shield UK
           cd app/boards/shields/keychron/b6/uk
           cat <<EOF >> keychron_b6_uk.conf
           CONFIG_USB_HID_BOOT_PROTOCOL=y
           CONFIG_ZMK_HID_REPORT_TYPE_HKRO=y
           CONFIG_ZMK_USB=y
+
+          # Forçar a identificação eletrónica do modelo ISO (0x076C)
+          CONFIG_USB_DEVICE_PID=0x076C
+          CONFIG_USB_DEVICE_VID=0x3434
           EOF
 
-      - name: Build firmware (Keychron B6 UK)
+      - name: Build firmware (Keychron B6 ISO via UK Shield)
         run: |
           cd zmk-repo/app
           west build -p -b keychron -- -DSHIELD=keychron_b6_uk
@@ -53,5 +57,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: keychron_b6_uk_firmware
+          name: keychron_b6_iso_firmware
           path: zmk-repo/app/build/zephyr/zmk.uf2
