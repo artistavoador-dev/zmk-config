@@ -15,7 +15,7 @@ jobs:
         run: |
           pip3 install west
           # 1. Clonar o repositório da Keychron diretamente
-          git clone -b keychron_bpro https://github.com zmk-main
+          git clone -b keychron_bpro https://github.com/keychron/zmk.git
           cd zmk-main
           
           # 2. Inicialização local obrigatória da Keychron
