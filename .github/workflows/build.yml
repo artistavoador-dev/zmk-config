@@ -15,32 +15,29 @@ jobs:
 
       - name: Initialize Keychron Workspace
         run: |
-          # 1. Clonar o repositório oficial da Keychron com o link completo
+          # 1. Clonar o repositório oficial da Keychron
           git clone -b keychron_bpro https://github.com/keychron/zmk.git zmk-repo
           cd zmk-repo
           
-          # 2. Inicialização do manifest local da Keychron
+          # 2. Inicialização do ecossistema da Keychron
           west init -l app/
           west update
           west zephyr-export
           
-          # 3. Procurar e aplicar o patch obrigatório da Keychron automaticamente
+          # 3. Aplicar o patch obrigatório de hardware da Keychron
           PATCH_FILE=$(find . -name "*esb-nrf-fix.patch" | head -n 1)
           if [ -n "$PATCH_FILE" ]; then
-            echo "Patch encontrado em: $PATCH_FILE"
             cd zephyr
             git config --global user.email "actions@github.com"
             git config --global user.name "GitHub Actions"
             git am "../$PATCH_FILE" || git apply "../$PATCH_FILE"
             cd ..
-          else
-            echo "AVISO: Ficheiro patch não encontrado na árvore de diretórios."
           fi
           
-          # Correção do Bug de barras da Keychron (Windows para Linux)
+          # Correção do Bug de caminhos Windows/Linux da Keychron
           sed -i 's|..\\version.h|../version.h|g' app/src/dfu/tdfu_prv.h
           
-          # 4. Injetar as suas 3 linhas personalizadas diretamente no ficheiro oficial do B6 UK
+          # 4. Injetar as suas 3 linhas personalizadas no ficheiro do B6 UK
           cd app/boards/shields/keychron/b6/uk
           cat <<EOF >> keychron_b6_uk.conf
           CONFIG_USB_HID_BOOT_PROTOCOL=y
@@ -48,13 +45,23 @@ jobs:
           CONFIG_ZMK_USB=y
           EOF
 
-      - name: Build firmware
+      - name: Build firmware (Keychron B6 UK)
         run: |
           cd zmk-repo/app
           west build -p -b keychron -- -DSHIELD=keychron_b6_uk
+          mv build/zephyr/zmk.uf2 ../../keychron_b6_uk.uf2
+
+      - name: Build settings reset (Limpeza de memória sob medida)
+        run: |
+          cd zmk-repo/app
+          # Compila o escudo especial "settings_reset" para o chip da Keychron
+          west build -p -b keychron -d build_reset -- -DSHIELD=settings_reset
+          mv build_reset/zephyr/zmk.uf2 ../../settings_reset.uf2
           
-      - name: Upload artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: keychron_b6_uk_firmware
-          path: zmk-repo/app/build/zephyr/zmk.uf2
+          path: |
+            keychron_b6_uk.uf2
+            settings_reset.uf2
