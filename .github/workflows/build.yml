@@ -1,0 +1,39 @@
+name: Build Keychron B6 Firmware
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache west modules
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-zephyr-modules
+        with:
+          path: |
+            modules
+            tools
+            zephyr
+            bootloader
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/west.yml') }}
+
+      - name: Initialize workspace
+        run: |
+          pip3 install west
+          west init -m https://github.com --mr keychron_bpro app
+          west update
+          west zephyr-export
+
+      - name: Build firmware
+        run: |
+          west build -p -s app -b keychron -- -DSHIELD=keychron_b6_uk -DZMK_CONFIG="/__w/zmk-config/zmk-config/config"
+          
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: keychron_b6_uk_firmware
+          path: build/zephyr/zmk.uf2
