@@ -37,7 +37,7 @@ jobs:
           # Correção do Bug de caminhos Windows/Linux da Keychron
           sed -i 's|..\\version.h|../version.h|g' app/src/dfu/tdfu_prv.h
           
-          # 4. Injetar as suas 3 linhas personalizadas originais (sem a flag inválida)
+          # 4. Injetar as suas 3 linhas personalizadas
           cd app/boards/shields/keychron/b6/uk
           cat <<EOF >> keychron_b6_uk.conf
           CONFIG_USB_HID_BOOT_PROTOCOL=y
@@ -51,12 +51,12 @@ jobs:
           west build -p -b keychron -- -DSHIELD=keychron_b6_uk
           mv build/zephyr/zmk.uf2 ../../keychron_b6_uk.uf2
 
-      - name: Build keychron reset (Limpeza oficial da Keychron)
+      - name: Build settings reset (Limpeza oficial)
         run: |
           cd zmk-repo/app
-          # Compilar o escudo de reset nativo da Keychron
-          west build -p -b keychron -d build_reset -- -DSHIELD=keychron_reset
-          mv build_reset/zephyr/zmk.uf2 ../../keychron_reset.uf2
+          # Compilar o escudo settings_reset apontando para a árvore de módulos correta
+          west build -p -b keychron -d build_reset -- -DSHIELD=settings_reset -DZMK_EXTRA_MODULES=/__w/zmk-config/zmk-config/zmk-repo/app
+          mv build_reset/zephyr/zmk.uf2 ../../settings_reset.uf2
           
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -64,4 +64,4 @@ jobs:
           name: keychron_b6_uk_firmware
           path: |
             keychron_b6_uk.uf2
-            keychron_reset.uf2
+            settings_reset.uf2
