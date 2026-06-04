@@ -22,11 +22,11 @@ jobs:
           west init -l app/
           west update
           
-          # 3. Aplicar o remendo de hardware da Keychron
+          # 3. Aplicar o remendo de hardware da Keychron (Caminho corrigido para ../../)
           cd zephyr
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
-          git am ../001-esb-nrf-fix.patch
+          git am ../../001-esb-nrf-fix.patch
           
           # 4. Injetar as suas 3 linhas personalizadas diretamente no ficheiro oficial
           cd ../app/boards/shields/keychron/b6/uk
