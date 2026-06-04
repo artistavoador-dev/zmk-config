@@ -14,22 +14,16 @@ jobs:
       - name: Initialize Keychron Workspace
         run: |
           pip3 install west
-          # 1. Clonar o repositório da Keychron diretamente para a pasta correta
+          # 1. Clonar o repositório oficial da Keychron com o link completo
           git clone -b keychron_bpro https://github.com/keychron/zmk.git zmk-repo
           cd zmk-repo
           
-          # 2. Inicialização local do ecossistema da Keychron
+          # 2. Inicialização do manifest local da Keychron
           west init -l app/
           west update
           
-          # 3. Aplicar o remendo de hardware usando o ficheiro local integrado
-          cd zephyr
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git apply ../001-esb-nrf-fix.patch || git am ../001-esb-nrf-fix.patch
-          
-          # 4. Injetar as suas 3 linhas personalizadas diretamente no ficheiro oficial
-          cd ../app/boards/shields/keychron/b6/uk
+          # 3. Injetar as suas 3 linhas personalizadas diretamente no ficheiro oficial do B6 UK
+          cd app/boards/shields/keychron/b6/uk
           cat <<EOF >> keychron_b6_uk.conf
           CONFIG_USB_HID_BOOT_PROTOCOL=y
           CONFIG_ZMK_HID_REPORT_TYPE_HKRO=y
