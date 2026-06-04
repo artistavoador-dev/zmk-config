@@ -14,19 +14,19 @@ jobs:
       - name: Initialize Keychron Workspace
         run: |
           pip3 install west
-          # 1. Clonar o repositório oficial da Keychron
-          git clone -b keychron_bpro https://github.com/keychron/zmk.git
-          cd zmk
+          # 1. Clonar o repositório da Keychron diretamente para a pasta correta
+          git clone -b keychron_bpro https://github.com/keychron/zmk.git zmk-repo
+          cd zmk-repo
           
-          # 2. Inicialização do manifest local obrigatório da Keychron
+          # 2. Inicialização local do ecossistema da Keychron
           west init -l app/
           west update
           
-          # 3. Aplicar o remendo de hardware da Keychron (Caminho corrigido para ../../)
+          # 3. Aplicar o remendo de hardware usando o ficheiro local integrado
           cd zephyr
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
-          git am ../../001-esb-nrf-fix.patch
+          git apply ../001-esb-nrf-fix.patch || git am ../001-esb-nrf-fix.patch
           
           # 4. Injetar as suas 3 linhas personalizadas diretamente no ficheiro oficial
           cd ../app/boards/shields/keychron/b6/uk
@@ -38,11 +38,11 @@ jobs:
 
       - name: Build firmware
         run: |
-          cd zmk/app
+          cd zmk-repo/app
           west build -p -b keychron -- -DSHIELD=keychron_b6_uk
           
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: keychron_b6_uk_firmware
-          path: zmk/build/zephyr/zmk.uf2
+          path: zmk-repo/build/zephyr/zmk.uf2
